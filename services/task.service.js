@@ -3,19 +3,34 @@ const TaskModel = require('../models/Task.model');
 const ClientModel = require('../models/Client.model');
 
 const populateTask = [
-  {
-    path: 'author',
-    select: { firstName: 1 },
-  },
+  // {
+  //   path: 'author',
+  //   select: { firstName: 1 },
+  // },
   { path: 'assignedTo', select: { firstName: 1 } },
   { path: 'category', select: { title: 1 } },
   { path: 'client', select: { companyName: 1, eic: 1 } },
 ];
 
-exports.getAll = async () => {
-  return TaskModel.find()
-    .select('title client assignedTo category dateEnd')
-    .populate(populateTask);
+exports.getAll = async (paginationOptions) => {
+  // return TaskModel.find()
+  //   .select('title client assignedTo category dateEnd')
+  //   .populate(populateTask);
+
+  // with pagination
+  return TaskModel.paginate(
+    {},
+    {
+      select: '-description -author',
+      populate: populateTask,
+      customLabels: {
+        docs: 'data',
+        meta: 'paginator',
+      },
+      // collation: { locale: 'bg', numericOrdering: true },
+      ...paginationOptions,
+    }
+  );
 };
 
 exports.getOne = async (id) => {

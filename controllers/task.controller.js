@@ -7,8 +7,23 @@ const taskService = require('../services/task.service');
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const tasks = await taskService.getAll();
-    return res.status(200).json({ data: tasks });
+    // const tasks = await taskService.getAll();
+    // return res.status(200).json({ data: tasks });
+
+    // with pagination
+    const { pagination, page, limit, sortBy, orderBy } = req.query;
+
+    const paginationOptions = {
+      pagination,
+      page,
+      limit,
+      // sort locale? more criterias?
+      sort: { [sortBy || 'createdAt']: orderBy || 'asc' },
+    };
+
+    const tasks = await taskService.getAll(paginationOptions);
+
+    return res.status(200).json(tasks);
   })
 );
 
