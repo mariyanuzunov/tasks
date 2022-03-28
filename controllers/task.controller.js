@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const asyncHandler = require('express-async-handler');
 
 const taskService = require('../services/task.service');
+const commentService = require('../services/comment.service');
 
 router.get(
   '/',
@@ -11,8 +12,8 @@ router.get(
     // return res.status(200).json({ data: tasks });
 
     // with pagination
-    const { pagination, page, limit, sortBy, orderBy } = req.query;
-
+    const { page, limit, sortBy, orderBy } = req.query;
+    const pagination = page || limit;
     const paginationOptions = {
       pagination,
       page,
@@ -100,6 +101,36 @@ router.delete(
     }
 
     return res.status(200).json({ data: { _id: task._id } });
+  })
+);
+
+// Comments
+
+router.get(
+  '/:id/comments',
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: 'invalid id' });
+    }
+
+    const comments = await commentService.getAll(id);
+
+    res.status(201).json({ data: comments });
+  })
+);
+
+router.post(
+  '/:id/comments',
+  asyncHandler(async (req, res) => {
+    const author = req.user._id;
+    const { id: task } = req.params;
+    const { content } = req.body;
+
+    const comment = await commentService.createOne({ author, task, content });
+
+    res.status(201).json({ data: comment });
   })
 );
 
