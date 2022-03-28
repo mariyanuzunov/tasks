@@ -2,7 +2,7 @@
 
 ## Categories
 
-#### **/categories**
+#### **/tasks/categories**
 
 - Method - GET
 - Authentication: YES
@@ -47,7 +47,7 @@ res:
 
 ---
 
-#### **/categories**
+#### **/tasks/categories**
 
 - Method - POST
 - Authentication: YES
@@ -77,7 +77,7 @@ res:
 
 ---
 
-#### **/categories/:id**
+#### **/tasks/categories/:id**
 
 - Method - PUT
 - Authentication: YES
@@ -108,7 +108,7 @@ res:
 
 ---
 
-#### **/categories/:id**
+#### **/tasks/categories/:id**
 
 - Method - DELETE
 - Authentication: YES
