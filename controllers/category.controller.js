@@ -1,101 +1,184 @@
-const router = require('express').Router();
+// const router = require('express').Router();
 const mongoose = require('mongoose');
 const asyncHandler = require('express-async-handler');
 
 const categoryService = require('../services/category.service');
 
-router.get(
-  '/',
-  asyncHandler(async (req, res) => {
-    console.log(req.user);
-    const categories = await categoryService.getAll();
-    res.status(200).json({ data: categories });
-  })
-);
+exports.getAllCategories = asyncHandler(async (req, res) => {
+  const categories = await categoryService.getAll();
+  res.status(200).json({ data: categories });
+});
 
-router.post(
-  '/',
-  asyncHandler(async (req, res) => {
-    const { title } = req.body;
+exports.createCategory = asyncHandler(async (req, res) => {
+  const { title } = req.body;
 
-    if (!title) {
+  if (!title) {
+    return res
+      .status(400)
+      .json({ message: 'Моля, въведете загавие на категорията!' });
+  }
+
+  try {
+    const category = await categoryService.createOne({ title });
+    return res.status(201).json({ data: category });
+  } catch (error) {
+    if (error.code === 11000) {
       return res
         .status(400)
-        .json({ message: 'Моля, въведете загавие на категорията!' });
+        .json({ message: 'Тази категория вече съществува!' });
     }
 
-    try {
-      const category = await categoryService.createOne({ title });
-      return res.status(201).json({ data: category });
-    } catch (error) {
-      if (error.code === 11000) {
-        return res
-          .status(400)
-          .json({ message: 'this category already exists' });
-      }
+    throw new Error(error);
+  }
+});
 
-      throw new Error(error);
-    }
-  })
-);
+exports.updateCategory = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { title } = req.body;
 
-router.put(
-  '/:id',
-  asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const { title } = req.body;
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Невалидно ID!' });
+  }
 
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: 'invalid id' });
-    }
+  if (!title) {
+    return res
+      .status(400)
+      .json({ message: 'Моля, въведете загавие на категорията!' });
+  }
 
-    if (!title) {
-      return res.status(400).json({ message: 'title field is required' });
-    }
+  let updatedCategory;
 
-    let updatedCategory;
-
-    try {
-      updatedCategory = await categoryService.updateOne(id, title);
-    } catch (error) {
-      if (error.code === 11000) {
-        return res
-          .status(400)
-          .json({ message: 'this category already exists' });
-      }
-
-      throw new Error(error);
-    }
-
-    if (!updatedCategory) {
+  try {
+    updatedCategory = await categoryService.updateOne(id, title);
+  } catch (error) {
+    if (error.code === 11000) {
       return res
         .status(400)
-        .json({ message: `category with id ${id} not found` });
+        .json({ message: 'Тази категория вече съществува!' });
     }
 
-    return res.status(200).json({ data: updatedCategory });
-  })
-);
+    throw new Error(error);
+  }
 
-router.delete(
-  '/:id',
-  asyncHandler(async (req, res) => {
-    const { id } = req.params;
+  if (!updatedCategory) {
+    return res
+      .status(400)
+      .json({ message: `Не е намерена категория с ID ${id}` });
+  }
 
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: 'invalid id' });
-    }
+  return res.status(200).json({ data: updatedCategory });
+});
 
-    const category = await categoryService.deleteOne(id);
+exports.deleteCategory = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-    if (!category) {
-      return res
-        .status(400)
-        .json({ message: `category with id ${id} not found` });
-    }
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Невалидно ID!' });
+  }
 
-    return res.status(200).json({ data: { _id: category._id } });
-  })
-);
+  const category = await categoryService.deleteOne(id);
 
-module.exports = router;
+  if (!category) {
+    return res
+      .status(400)
+      .json({ message: `Не е намерена категория с ID ${id}` });
+  }
+
+  return res.status(200).json({ data: { _id: category._id } });
+});
+
+// router.get(
+//   '/',
+//   asyncHandler(async (req, res) => {
+//     console.log(req.user);
+//     const categories = await categoryService.getAll();
+//     res.status(200).json({ data: categories });
+//   })
+// );
+
+// router.post(
+//   '/',
+//   asyncHandler(async (req, res) => {
+//     const { title } = req.body;
+
+//     if (!title) {
+//       return res
+//         .status(400)
+//         .json({ message: 'Моля, въведете загавие на категорията!' });
+//     }
+
+//     try {
+//       const category = await categoryService.createOne({ title });
+//       return res.status(201).json({ data: category });
+//     } catch (error) {
+//       if (error.code === 11000) {
+//         return res
+//           .status(400)
+//           .json({ message: 'this category already exists' });
+//       }
+
+//       throw new Error(error);
+//     }
+//   })
+// );
+
+// router.put(
+//   '/:id',
+//   asyncHandler(async (req, res) => {
+//     const { id } = req.params;
+//     const { title } = req.body;
+
+//     if (!mongoose.isValidObjectId(id)) {
+//       return res.status(400).json({ message: 'invalid id' });
+//     }
+
+//     if (!title) {
+//       return res.status(400).json({ message: 'title field is required' });
+//     }
+
+//     let updatedCategory;
+
+//     try {
+//       updatedCategory = await categoryService.updateOne(id, title);
+//     } catch (error) {
+//       if (error.code === 11000) {
+//         return res
+//           .status(400)
+//           .json({ message: 'this category already exists' });
+//       }
+
+//       throw new Error(error);
+//     }
+
+//     if (!updatedCategory) {
+//       return res
+//         .status(400)
+//         .json({ message: `category with id ${id} not found` });
+//     }
+
+//     return res.status(200).json({ data: updatedCategory });
+//   })
+// );
+
+// router.delete(
+//   '/:id',
+//   asyncHandler(async (req, res) => {
+//     const { id } = req.params;
+
+//     if (!mongoose.isValidObjectId(id)) {
+//       return res.status(400).json({ message: 'invalid id' });
+//     }
+
+//     const category = await categoryService.deleteOne(id);
+
+//     if (!category) {
+//       return res
+//         .status(400)
+//         .json({ message: `category with id ${id} not found` });
+//     }
+
+//     return res.status(200).json({ data: { _id: category._id } });
+//   })
+// );
+
+// module.exports = router;

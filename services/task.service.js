@@ -34,8 +34,8 @@ exports.getAll = async (paginationOptions) => {
 };
 
 exports.getOne = async (id) => {
-  const foo = await ClientModel.findOne({ client: id }).populate('tasks');
-  console.log(foo);
+  // const foo = await ClientModel.findOne({ client: id }).populate('tasks');
+  // console.log(foo);
 
   // const task =
 

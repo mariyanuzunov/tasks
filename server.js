@@ -43,7 +43,7 @@ async function withAuth(req, res, next) {
 app.use('/auth', userController);
 
 //  <<<
-app.use('/categories', withAuth, categoryController);
+// app.use('/categories', withAuth, categoryController);
 app.use('/tasks', withAuth, taskController);
 // app.use('/comments', withAuth, commentController);
 
