@@ -17,14 +17,5 @@ exports.updateOne = async (id, title) => {
 };
 
 exports.deleteOne = async (id) => {
-  //   throw new Error('msg');
   return CategoryModel.findByIdAndRemove(id);
 };
-
-// module.exports = {
-//   getAll,
-//   getOne,
-//   createOne,
-//   updateOne,
-//   deleteOne,
-// };

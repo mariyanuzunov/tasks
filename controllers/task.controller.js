@@ -1,124 +1,83 @@
-const router = require('express').Router();
 const mongoose = require('mongoose');
 const asyncHandler = require('express-async-handler');
 
-const categoryController = require('./category.controller');
-const commentController = require('./comment.controller');
-
 const taskService = require('../services/task.service');
-// const commentService = require('../services/comment.service');
 
-// Categories
+exports.getTasks = asyncHandler(async (req, res) => {
+  const { page, limit, sortBy, orderBy } = req.query;
+  const pagination = page || limit;
+  const paginationOptions = {
+    pagination,
+    page,
+    limit,
+    // sort locale? more criterias?
+    sort: { [sortBy || 'createdAt']: orderBy || 'asc' },
+  };
 
-router.get('/categories', categoryController.getAllCategories);
-router.post('/categories', categoryController.createCategory);
-router.put('/categories/:id', categoryController.updateCategory);
-router.delete('/categories/:id', categoryController.deleteCategory);
+  const tasks = await taskService.getAll(paginationOptions);
 
-router.get(
-  '/',
-  asyncHandler(async (req, res) => {
-    const { page, limit, sortBy, orderBy } = req.query;
-    const pagination = page || limit;
-    const paginationOptions = {
-      pagination,
-      page,
-      limit,
-      // sort locale? more criterias?
-      sort: { [sortBy || 'createdAt']: orderBy || 'asc' },
-    };
+  return res.status(200).json(tasks);
+});
 
-    const tasks = await taskService.getAll(paginationOptions);
+exports.getTask = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-    return res.status(200).json(tasks);
-  })
-);
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Невалидно ID!' });
+  }
 
-router.get(
-  '/:id',
-  asyncHandler(async (req, res) => {
-    const { id } = req.params;
+  const task = await taskService.getOne(id);
 
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: 'Невалидно ID!' });
-    }
+  if (!task) {
+    return res.status(400).json({ message: `Не е намерена задача с ID ${id}` });
+  }
 
-    const task = await taskService.getOne(id);
+  return res.status(200).json({ data: task });
+});
 
-    if (!task) {
-      return res
-        .status(400)
-        .json({ message: `Не е намерена задача с ID ${id}` });
-    }
+exports.createTask = asyncHandler(async (req, res) => {
+  let task;
+  try {
+    task = await taskService.createOne({
+      ...req.body,
+      author: req.user._id,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).end();
+  }
 
-    return res.status(200).json({ data: task });
-  })
-);
+  return res.status(201).json({ data: task });
+});
 
-router.post(
-  '/',
-  asyncHandler(async (req, res) => {
-    let task;
-    try {
-      task = await taskService.createOne({
-        ...req.body,
-        author: req.user._id,
-      });
-    } catch (error) {
-      console.log(error);
-      return res.status(400).end();
-    }
+exports.updateTask = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-    return res.status(201).json({ data: task });
-  })
-);
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Невалидно ID!' });
+  }
 
-router.put(
-  '/:id',
-  asyncHandler(async (req, res) => {
-    const { id } = req.params;
+  const updatedTask = await taskService.updateOne(id, req.body);
 
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: 'Невалидно ID!' });
-    }
+  if (!updatedTask) {
+    return res.status(400).json({ message: `Не е намерена задача с ID ${id}` });
+  }
 
-    const updatedTask = await taskService.updateOne(id, req.body);
+  return res.status(200).json({ data: updatedTask });
+});
 
-    if (!updatedTask) {
-      return res
-        .status(400)
-        .json({ message: `Не е намерена задача с ID ${id}` });
-    }
+exports.deleteTask = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-    return res.status(200).json({ data: updatedTask });
-  })
-);
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Невалидно ID!' });
+  }
 
-// Delete permissions?
-router.delete(
-  '/:id',
-  asyncHandler(async (req, res) => {
-    const { id } = req.params;
+  const task = await taskService.deleteOne(id);
 
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ message: 'Невалидно ID!' });
-    }
+  if (!task) {
+    return res.status(400).json({ message: `Не е намерена задача с ID ${id}` });
+  }
 
-    const task = await taskService.deleteOne(id);
-
-    if (!task) {
-      return res
-        .status(400)
-        .json({ message: `Не е намерена задача с ID ${id}` });
-    }
-
-    return res.status(200).json({ data: { _id: task._id } });
-  })
-);
-
-// Comments
-
-router.get('/:id/comments', commentController.getTaskComments);
-router.post('/:id/comments', commentController.createTaskComment);
-
-module.exports = router;
+  return res.status(200).json({ data: { _id: task._id } });
+});

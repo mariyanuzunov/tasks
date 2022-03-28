@@ -2,9 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 const userController = require('./controllers/user.controller');
-const categoryController = require('./controllers/category.controller');
-const taskController = require('./controllers/task.controller');
-// const commentController = require('./controllers/comment.controller');
+const taskRouter = require('./routes/task.routes');
+
 const errorHandler = require('./middlewares/error.middleware');
 
 const app = express();
@@ -43,10 +42,8 @@ async function withAuth(req, res, next) {
 app.use('/auth', userController);
 
 //  <<<
-// app.use('/categories', withAuth, categoryController);
-app.use('/tasks', withAuth, taskController);
-// app.use('/comments', withAuth, commentController);
 
+app.use('/tasks', withAuth, taskRouter);
 app.use('*', (req, res) => res.status(404).json({ message: 'Page Not Found' }));
 
 app.use(errorHandler);
